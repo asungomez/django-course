@@ -69,6 +69,15 @@ cd src
 flake8
 ```
 
+### Running the tests
+
+To run the tests, you can use the following command:
+
+```bash
+cd src
+python manage.py test
+```
+
 ## Running the application using Docker
 
 The benefits of using Docker is that the application will run in the exact same environment it would when deployed, making it easier to debug issues. It also doesn't require you to install Python or create a virtual environment. It does not integrate easily with VSCode debugging, though.
@@ -87,4 +96,12 @@ You can run the linter using:
 
 ```bash
 docker compose run --rm app sh -c "flake8"
+```
+
+### Running the tests inside the container
+
+You can run the tests using:
+
+```bash
+docker compose run --rm app sh -c "python manage.py test"
 ```
