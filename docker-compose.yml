@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        - BUILD_ENV=dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app
+    command: >
+      sh -c "python manage.py runserver 0.0.0.0:8000"
