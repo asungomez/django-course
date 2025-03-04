@@ -16,7 +16,8 @@ FROM base_builder AS production_builder
 
 FROM ${BUILD_ENV}_builder AS runner
 
-ENV PYHTONUNBUFFERED 1
+ENV PYHTONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
 ENV PATH="/py/bin:$PATH"
 
 COPY ./src /app
@@ -27,3 +28,5 @@ USER django-user
 
 WORKDIR /app
 EXPOSE 8000
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "app.wsgi:application"]
+
