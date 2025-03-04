@@ -15,3 +15,10 @@ venv
 
 # Django
 src/db.sqlite3
+
+# Test
+test/__pycache__
+test/*/__pycache__
+test/*/*/__pycache__
+test/*/*/*/__pycache__
+test/.pytest_cache

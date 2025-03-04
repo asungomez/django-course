@@ -69,13 +69,20 @@ cd src
 flake8
 ```
 
+### Installing test dependencies
+
+If you want to run the tests, you can install the test dependencies using the following command:
+
+```bash
+pip install -r requirements.test.txt
+```
+
 ### Running the tests
 
 To run the tests, you can use the following command:
 
 ```bash
-cd src
-python manage.py test
+pytest
 ```
 
 ## Running the application using Docker
@@ -98,11 +105,8 @@ You can run the linter using:
 docker compose run --rm app sh -c "flake8"
 ```
 
-### Running the tests inside the container
+### Running the tests inside a container
 
-You can run the tests using:
+The tests cannot run inside a container. This is because we're using testcontainers inside the test code, which requires the container to be able to spin up new containers. This is not a good idea on most scenarios, and here's a great explanation why:
 
-```bash
-docker compose run --rm app sh -c "python manage.py test"
-```
-
+https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
