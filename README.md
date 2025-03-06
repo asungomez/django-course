@@ -42,9 +42,27 @@ The dependencies for running the application can be installed using the followin
 pip install -r requirements.txt
 ```
 
+You need a DB to run the application. You can create a DB container by running:
+
+```bash
+docker compose up db
+```
+
+The app needs an .env file like the following:
+
+```env
+DEBUG=True
+DB_HOST=localhost
+DB_NAME=django_course
+DB_USER=django_course
+DB_PASSWORD=django_course
+DJANGO_SECRET_KEY="django-insecure-trkc%c14mv8b%95!spl5n&sg51f7wsyvasx%7ddl$07-f-iynh"
+```
+
 Then you can run a dev server using:
 
 ```bash
+cd src
 python manage.py runserver 0.0.0.0:8000
 ```
 
@@ -87,6 +105,15 @@ pytest
 ## Running the application using Docker
 
 The benefits of using Docker is that the application will run in the exact same environment it would when deployed, making it easier to debug issues. It also doesn't require you to install Python or create a virtual environment. It does not integrate easily with VSCode debugging, though.
+
+### Importing self-signed certificates
+
+When working on a company computer, there are self-signed certificates that can make the Docker image build to fail. To prevent this, follow the steps below:
+
+- Enter JLL Self-Service
+- Execute the Netskope Developer Tool Configuration
+- Create a directory at the root of the project called `.certs`
+- Copy the certificate file netskope-cert-bundle.pem into `.certs/netskope-cert-bundle.pem`
 
 ### Spinning up the container
 
