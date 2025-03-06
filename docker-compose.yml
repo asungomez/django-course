@@ -2,8 +2,6 @@ services:
   app:
     build:
       context: .
-      args:
-        - BUILD_ENV=dev
     ports:
       - "8000:8000"
     volumes:

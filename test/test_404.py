@@ -1,22 +1,23 @@
 import logging
 import pytest
-from testcontainers.core.container import DockerContainer
-from testcontainers.core.waiting_utils import wait_for_logs
+from testcontainers.core.container import DockerContainer  # type: ignore
+from testcontainers.core.waiting_utils import wait_for_logs  # type: ignore
 import requests
 import docker
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 @pytest.fixture(scope="module", autouse=True)
-def api_url(request):
+def api_url(request: pytest.FixtureRequest) -> str:
     """Spin up all necessary containers and return the API URL."""
     url = None
     api_container = None
     client = docker.from_env()
     image = None
 
-    def cleanup():
+    def cleanup() -> None:
         try:
             if api_container is not None:
                 logger.info("Stopping container")
@@ -33,17 +34,21 @@ def api_url(request):
     try:
         # Build the image
         logger.info("Building image")
-        image, _ = client.images.build(path=".", buildargs={"BUILD_ENV": "production"})
+        image, _ = client.images.build(path=".")
 
         # Spin up the API container
         logger.info("Starting container")
         api_container = DockerContainer(image=image.id)
         api_container.with_exposed_ports(8000)
         api_container.start()
-        
+
         # Wait for Gunicorn to start
         logger.info("Waiting for Gunicorn to start")
-        wait_for_logs(api_container, "Listening at: http://0.0.0.0:8000", timeout=30)
+        wait_for_logs(
+            api_container,
+            "Listening at: http://0.0.0.0:8000",
+            timeout=30,
+        )
 
         # Get the API URL
         host = api_container.get_container_host_ip()
@@ -58,7 +63,8 @@ def api_url(request):
             logger.error("Container logs:\n%s", logs)
         raise Exception("Failed to start API container")
 
-def test_404(api_url):
+
+def test_404(api_url: str) -> None:
     """Test that unknown routes return 404."""
     path = "/unknown"
     url = f"{api_url}{path}"

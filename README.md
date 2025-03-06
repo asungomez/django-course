@@ -34,39 +34,38 @@ For a freshly created virtual environment, it is recommended to upgrade pip:
 pip install --upgrade pip
 ```
 
-### Installing dependencies
+### Running the application
 
-To install the dependencies, you can use the following command:
+The dependencies for running the application can be installed using the following command:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Installing dev dependencies
+Then you can run a dev server using:
 
-If you want to use dev dependencies such as flake8 for linting, you can use the following command:
+```bash
+python manage.py runserver 0.0.0.0:8000
+```
+
+### Validating the code
+
+The dependencies for validations can be installed using:
 
 ```bash
 pip install -r requirements.dev.txt
 ```
 
-### Running the application
-
-Run the application with the following command:
-
-```bash
-cd src
-python manage.py runserver 0.0.0.0:8000
-```
-
-
-### Running the linter
-
 To run the linter, you can use the following command:
 
 ```bash
-cd src
 flake8
+```
+
+And to run the static type checker, you can use the following command:
+
+```bash
+mypy . --strict
 ```
 
 ### Installing test dependencies
@@ -96,17 +95,3 @@ To spin up the container, you can use the following command:
 ```bash
 docker compose up app
 ```
-
-### Running the linter inside the container
-
-You can run the linter using:
-
-```bash
-docker compose run --rm app sh -c "flake8"
-```
-
-### Running the tests inside a container
-
-The tests cannot run inside a container. This is because we're using testcontainers inside the test code, which requires the container to be able to spin up new containers. This is not a good idea on most scenarios, and here's a great explanation why:
-
-https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
