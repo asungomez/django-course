@@ -7,6 +7,7 @@ from testcontainers.core.network import Network  # type: ignore
 from testcontainers.core.waiting_utils import wait_for_logs  # type: ignore
 import requests
 import docker
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -63,10 +64,11 @@ def api_url(request: pytest.FixtureRequest) -> str:
         db_port = db_container.get_exposed_port(5432)
 
         # Build the API image
+        build_env = os.environ.get("BUILD_ENV", "development")
         logger.info("Building image")
         image, _ = client.images.build(
             path=".",
-            buildargs={"BUILD_ENV": "development"}
+            buildargs={"BUILD_ENV": build_env}
             )
 
         # Spin up the API container
