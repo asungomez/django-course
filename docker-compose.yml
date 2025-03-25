@@ -3,10 +3,32 @@ services:
     build:
       context: .
       args:
-        - BUILD_ENV=dev
+        - BUILD_ENV=development
     ports:
       - "8000:8000"
     volumes:
       - ./src:/app
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=django_course
+      - DB_USER=django_course
+      - DB_PASSWORD=django_course
+      - DB_PORT=5432
+      - DEBUG=True
+      - DJANGO_SECRET_KEY=notasecret
+    depends_on:
+      - db
+  db:
+    ports:
+      - "5433:5432"
+    image: postgres:17-alpine
+    volumes:
+      - dev-db-data:/var/lib/postgresql/
+    environment:
+      - POSTGRES_DB=django_course
+      - POSTGRES_USER=django_course
+      - POSTGRES_PASSWORD=django_course
+volumes:
+  dev-db-data:

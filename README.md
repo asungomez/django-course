@@ -34,39 +34,56 @@ For a freshly created virtual environment, it is recommended to upgrade pip:
 pip install --upgrade pip
 ```
 
-### Installing dependencies
+### Running the application
 
-To install the dependencies, you can use the following command:
+The dependencies for running the application can be installed using the following command:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Installing dev dependencies
-
-If you want to use dev dependencies such as flake8 for linting, you can use the following command:
+You need a DB to run the application. You can create a DB container by running:
 
 ```bash
-pip install -r requirements.dev.txt
+docker compose up db -d
 ```
 
-### Running the application
+The app needs an src/.env file like the following:
 
-Run the application with the following command:
+```env
+DEBUG=True
+DB_HOST=localhost
+DB_NAME=django_course
+DB_USER=django_course
+DB_PASSWORD=django_course
+DJANGO_SECRET_KEY="django-insecure-trkc%c14mv8b%95!spl5n&sg51f7wsyvasx%7ddl$07-f-iynh"
+```
+
+Then you can run a dev server using:
 
 ```bash
 cd src
 python manage.py runserver 0.0.0.0:8000
 ```
 
+### Validating the code
 
-### Running the linter
+The dependencies for validations can be installed using:
+
+```bash
+pip install -r requirements.dev.txt
+```
 
 To run the linter, you can use the following command:
 
 ```bash
-cd src
 flake8
+```
+
+And to run the static type checker, you can use the following command:
+
+```bash
+mypy . --strict
 ```
 
 ### Installing test dependencies
@@ -89,6 +106,15 @@ pytest
 
 The benefits of using Docker is that the application will run in the exact same environment it would when deployed, making it easier to debug issues. It also doesn't require you to install Python or create a virtual environment. It does not integrate easily with VSCode debugging, though.
 
+### Importing self-signed certificates
+
+When working on a company computer, there are self-signed certificates that can make the Docker image build to fail. To prevent this, follow the steps below:
+
+- Enter JLL Self-Service
+- Execute the Netskope Developer Tool Configuration
+- Create a directory at the root of the project called `.certs`
+- Copy the certificate file netskope-cert-bundle.pem into `.certs/netskope-cert-bundle.pem`
+
 ### Spinning up the container
 
 To spin up the container, you can use the following command:
@@ -96,17 +122,3 @@ To spin up the container, you can use the following command:
 ```bash
 docker compose up app
 ```
-
-### Running the linter inside the container
-
-You can run the linter using:
-
-```bash
-docker compose run --rm app sh -c "flake8"
-```
-
-### Running the tests inside a container
-
-The tests cannot run inside a container. This is because we're using testcontainers inside the test code, which requires the container to be able to spin up new containers. This is not a good idea on most scenarios, and here's a great explanation why:
-
-https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/

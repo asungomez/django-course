@@ -22,3 +22,6 @@ test/*/__pycache__
 test/*/*/__pycache__
 test/*/*/*/__pycache__
 test/.pytest_cache
+
+# Local certificates
+.certs
