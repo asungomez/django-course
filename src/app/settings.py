@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-import environ
+import environ # type: ignore
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,11 +23,11 @@ env = environ.Env(
         str,
         "django-insecure-trkc%c14mv8b%95!spl5n&sg51f7wsyvasx%7ddl$07-f-iynh",
     ),
-    DB_HOST=(str),
-    DB_NAME=(str),
-    DB_USER=(str),
-    DB_PASSWORD=(str),
-    DB_PORT=(int),
+    DB_HOST=(str, None),
+    DB_NAME=(str, None),
+    DB_USER=(str, None),
+    DB_PASSWORD=(str, None),
+    DB_PORT=(int, None),
 )
 
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
@@ -140,3 +140,5 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+AUTH_USER_MODEL = 'core.User'

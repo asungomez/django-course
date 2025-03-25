@@ -21,6 +21,8 @@ services:
     depends_on:
       - db
   db:
+    ports:
+      - "5433:5432"
     image: postgres:17-alpine
     volumes:
       - dev-db-data:/var/lib/postgresql/
@@ -29,4 +31,4 @@ services:
       - POSTGRES_USER=django_course
       - POSTGRES_PASSWORD=django_course
 volumes:
-  dev-db-data: 
+  dev-db-data:

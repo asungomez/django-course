@@ -45,10 +45,10 @@ pip install -r requirements.txt
 You need a DB to run the application. You can create a DB container by running:
 
 ```bash
-docker compose up db
+docker compose up db -d
 ```
 
-The app needs an .env file like the following:
+The app needs an src/.env file like the following:
 
 ```env
 DEBUG=True

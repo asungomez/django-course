@@ -44,7 +44,7 @@ def api_url(request: pytest.FixtureRequest) -> str:
     request.addfinalizer(cleanup)
 
     try:
-         # Create Docker Network
+        # Create Docker Network
         network = Network().create()
 
         # Create a Posgres container inside the network
@@ -64,7 +64,10 @@ def api_url(request: pytest.FixtureRequest) -> str:
 
         # Build the API image
         logger.info("Building image")
-        image, _ = client.images.build(path=".", buildargs={"BUILD_ENV": "development"})
+        image, _ = client.images.build(
+            path=".",
+            buildargs={"BUILD_ENV": "development"}
+            )
 
         # Spin up the API container
         logger.info("Starting container")
