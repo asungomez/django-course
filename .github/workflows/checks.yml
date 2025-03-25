@@ -14,13 +14,15 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Checkout 
+      - name: Checkout
         uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           # Semantic version range syntax or exact version of a Python version
           python-version: '3.13.2'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
       - name: Install dev dependencies
         run: pip install -r requirements.dev.txt
       - name: Lint with flake8
