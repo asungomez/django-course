@@ -5,3 +5,5 @@ exclude =
   manage.py
   settings.py
   venv
+
+indent-size = 2

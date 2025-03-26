@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import environ # type: ignore
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,6 +29,12 @@ env = environ.Env(
     DB_USER=(str, None),
     DB_PASSWORD=(str, None),
     DB_PORT=(int, None),
+    OKTA_DOMAIN=(str, None),
+    OKTA_CLIENT_ID=(str, None),
+    OKTA_CLIENT_SECRET=(str, None),
+    OKTA_LOGIN_REDIRECT=(str, None),
+    FRONT_END_URL=(str, None),
+    USE_HTTPS=(bool, True),
 )
 
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
@@ -52,6 +59,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "core",
+    "user",
 ]
 
 MIDDLEWARE = [
@@ -141,4 +149,25 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = 'core.User'
+AUTH_USER_MODEL = "core.User"
+
+# Okta config
+OKTA = {
+    "DOMAIN": env("OKTA_DOMAIN"),
+    "CLIENT_ID": env("OKTA_CLIENT_ID"),
+    "CLIENT_SECRET": env("OKTA_CLIENT_SECRET"),
+    "LOGIN_REDIRECT": env("OKTA_LOGIN_REDIRECT")
+}
+
+# Front-end config
+FRONT_END_URL = env("FRONT_END_URL")
+
+TOKEN_COOKIE_CONFIG = {
+    "NAME": "access_token",
+    "DOMAIN": None,
+    "SECURE": env("USE_HTTPS"),
+    "HTTP_ONLY": True,
+    "PATH": "/",
+    "SAMESITE": "Lax",
+    "LIFETIME": timedelta(hours=1)
+}
