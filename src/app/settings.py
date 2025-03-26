@@ -19,21 +19,23 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
+    ALLOWED_HOSTS=(list[str], []),
+    ALLOWED_ORIGINS=(list[str], []),
+    DB_HOST=(str, None),
+    DB_NAME=(str, None),
+    DB_PASSWORD=(str, None),
+    DB_PORT=(int, None),
+    DB_USER=(str, None),
     DEBUG=(bool, False),
     DJANGO_SECRET_KEY=(
         str,
         "django-insecure-trkc%c14mv8b%95!spl5n&sg51f7wsyvasx%7ddl$07-f-iynh",
     ),
-    DB_HOST=(str, None),
-    DB_NAME=(str, None),
-    DB_USER=(str, None),
-    DB_PASSWORD=(str, None),
-    DB_PORT=(int, None),
-    OKTA_DOMAIN=(str, None),
+    FRONT_END_URL=(str, None),
     OKTA_CLIENT_ID=(str, None),
     OKTA_CLIENT_SECRET=(str, None),
+    OKTA_DOMAIN=(str, None),
     OKTA_LOGIN_REDIRECT=(str, None),
-    FRONT_END_URL=(str, None),
     USE_HTTPS=(bool, True),
 )
 
@@ -43,10 +45,12 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-SECRET_KEY = env("DJANGO_SECRET_KEY")
-DEBUG = env("DEBUG")
+SECRET_KEY = env.str("DJANGO_SECRET_KEY")
+DEBUG = env.bool("DEBUG")
 
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS: list[str] = env.list("ALLOWED_HOSTS")
+CORS_ALLOWED_ORIGINS: list[str] = env.list("ALLOWED_ORIGINS")
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Application definition
@@ -58,11 +62,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "core",
     "user",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -99,11 +105,11 @@ WSGI_APPLICATION = "app.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "HOST": env("DB_HOST"),
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWORD"),
-        "PORT": env("DB_PORT"),
+        "HOST": env.str("DB_HOST"),
+        "NAME": env.str("DB_NAME"),
+        "USER": env.str("DB_USER"),
+        "PASSWORD": env.str("DB_PASSWORD"),
+        "PORT": env.int("DB_PORT"),
     }
 }
 
@@ -153,19 +159,19 @@ AUTH_USER_MODEL = "core.User"
 
 # Okta config
 OKTA = {
-    "DOMAIN": env("OKTA_DOMAIN"),
-    "CLIENT_ID": env("OKTA_CLIENT_ID"),
-    "CLIENT_SECRET": env("OKTA_CLIENT_SECRET"),
-    "LOGIN_REDIRECT": env("OKTA_LOGIN_REDIRECT")
+    "DOMAIN": env.str("OKTA_DOMAIN"),
+    "CLIENT_ID": env.str("OKTA_CLIENT_ID"),
+    "CLIENT_SECRET": env.str("OKTA_CLIENT_SECRET"),
+    "LOGIN_REDIRECT": env.str("OKTA_LOGIN_REDIRECT")
 }
 
 # Front-end config
-FRONT_END_URL = env("FRONT_END_URL")
+FRONT_END_URL = env.str("FRONT_END_URL")
 
 TOKEN_COOKIE_CONFIG = {
     "NAME": "access_token",
     "DOMAIN": None,
-    "SECURE": env("USE_HTTPS"),
+    "SECURE": env.bool("USE_HTTPS"),
     "HTTP_ONLY": True,
     "PATH": "/",
     "SAMESITE": "Lax",

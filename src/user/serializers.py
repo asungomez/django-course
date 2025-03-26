@@ -32,3 +32,14 @@ class UserSerializer(serializers.ModelSerializer[User]):
             raise ValueError("Invalid email")
         username = email_parts[0]
         return get_user_model().objects.get(username=username)
+
+    def to_dict(self, user):
+        """Return a dictionary representation of the user"""
+        return {
+            'id': user.id,
+            'email': user.email,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'last_login': user.last_login,
+        }

@@ -1,10 +1,12 @@
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.views import View
 from django.shortcuts import redirect
 from django.conf import settings
 from .okta import get_access_token, get_email_from_token
 from .serializers import UserSerializer
 from django.contrib.auth import get_user_model
+
+
 User = get_user_model()
 
 
@@ -38,3 +40,20 @@ class LoginView(View):
         except Exception as e:
             print(e)
             return redirect(f"{settings.FRONT_END_URL}/error")
+
+
+class CurrentUserView(View):
+
+    serializer = UserSerializer()
+
+    def get(self, request: HttpRequest) -> HttpResponse:
+        token = request.COOKIES.get(settings.TOKEN_COOKIE_CONFIG["NAME"])
+        if token is None:
+            return HttpResponse(status=401)
+        try:
+            email = get_email_from_token(token)
+            user = self.serializer.find_by_email(email)
+            return JsonResponse({"user": self.serializer.to_dict(user)})
+        except Exception as e:
+            json_error = {"error": str(e)}
+            return JsonResponse(json_error, status=401)
