@@ -7,13 +7,15 @@ from testcontainers.core.waiting_utils import wait_for_logs  # type: ignore
 import docker
 import os
 import logging
+from .utils import Helper
+from . import static
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def api_url(request: pytest.FixtureRequest) -> str:
+def tests_helper(request: pytest.FixtureRequest) -> Helper:
     """Spin up all necessary containers and return the API URL."""
     url = None
     api_container: DockerContainer = None
@@ -21,6 +23,7 @@ def api_url(request: pytest.FixtureRequest) -> str:
     image = None
     network: Network = None
     db_container: DockerContainer = None
+    mockserver_container: DockerContainer = None
 
     def cleanup() -> None:
         try:
@@ -32,6 +35,10 @@ def api_url(request: pytest.FixtureRequest) -> str:
                 logger.info("Stopping database container")
                 db_container.stop()
                 db_container._container.remove(force=True)
+            if mockserver_container is not None:
+                logger.info("Stopping mockserver container")
+                mockserver_container.stop()
+                mockserver_container._container.remove(force=True)
             if network is not None:
                 logger.info("Removing network")
                 network.remove()
@@ -62,6 +69,18 @@ def api_url(request: pytest.FixtureRequest) -> str:
         # Get the exposed port for the database
         db_port = db_container.get_exposed_port(5432)
 
+        # Create a MockServer container inside the network
+        logger.info("Starting MockServer container")
+        mockserver_container = (
+            DockerContainer(image="mockserver/mockserver")
+            .with_exposed_ports(1080)
+            .with_network(network)
+            .with_network_aliases(("mockserver"))
+            .start()
+        )
+        # Get the exposed port for the MockServer
+        mockserver_port = mockserver_container.get_exposed_port(1080)
+
         # Build the API image
         build_env = os.environ.get("BUILD_ENV", "development")
         logger.info("Building image")
@@ -72,6 +91,7 @@ def api_url(request: pytest.FixtureRequest) -> str:
 
         # Spin up the API container
         logger.info("Starting container")
+        mockserver_url = f"mockserver:{mockserver_port}"
         api_container = (
             DockerContainer(image=image.id)
             .with_exposed_ports(8000)
@@ -82,11 +102,11 @@ def api_url(request: pytest.FixtureRequest) -> str:
             .with_env("DB_USER", "test")
             .with_env("DEBUG", "True")
             .with_env("DJANGO_SECRET_KEY", "test")
-            .with_env("FRONT_END_URL", "http://fake-front-end.net")
+            .with_env("FRONT_END_URL", static.FRONT_END_URL)
             .with_env("OKTA_CLIENT_ID", "client-id")
             .with_env("OKTA_CLIENT_SECRET", "client-secret")
-            .with_env("OKTA_DOMAIN", "http://fake-okta.net")
-            .with_env("OKTA_LOGIN_REDIRECT", "http://fake-front-end.net")
+            .with_env("OKTA_DOMAIN", f"{mockserver_url}/okta")
+            .with_env("OKTA_LOGIN_REDIRECT", static.FRONT_END_URL)
             .with_env("USE_HTTPS", False)
             .with_network(network)
             .start()
@@ -105,7 +125,9 @@ def api_url(request: pytest.FixtureRequest) -> str:
         port = api_container.get_exposed_port(8000)
         url = f"http://{host}:{port}"
         logger.info("API available at %s", url)
-        return url
+
+        helper = Helper(url)
+        return helper
     except Exception as e:
         logger.error("Error starting containerized system: %s", str(e))
         if api_container is not None:
