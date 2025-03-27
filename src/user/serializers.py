@@ -33,7 +33,7 @@ class UserSerializer(serializers.ModelSerializer[User]):
         username = email_parts[0]
         return get_user_model().objects.get(username=username)
 
-    def to_dict(self, user):
+    def to_dict(self, user: User) -> dict[str, Any]:
         """Return a dictionary representation of the user"""
         return {
             'id': user.id,
