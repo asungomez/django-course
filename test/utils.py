@@ -175,7 +175,7 @@ class Helper:
             self,
             query: str,
             params: Sequence[Any] | Mapping[str, Any] | None = None
-        ) -> Optional[list]:
+            ) -> Optional[list]:
         """
         Query the database.
 
