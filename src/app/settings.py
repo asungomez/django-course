@@ -19,24 +19,25 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
-    ALLOWED_HOSTS=(list[str], []),
-    ALLOWED_ORIGINS=(list[str], []),
-    DB_HOST=(str, None),
-    DB_NAME=(str, None),
-    DB_PASSWORD=(str, None),
-    DB_PORT=(int, None),
-    DB_USER=(str, None),
-    DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list[str], []), # Allowed hosts for the Django app
+    ALLOWED_ORIGINS=(list[str], []), # Allowed origins for CORS
+    DB_HOST=(str, None), # Database host
+    DB_NAME=(str, None), # Database name
+    DB_PASSWORD=(str, None), # Database password
+    DB_PORT=(int, None), # Database port
+    DB_USER=(str, None), # Database user
+    DEBUG=(bool, False), # Debug mode for Django
     DJANGO_SECRET_KEY=(
         str,
         "django-insecure-trkc%c14mv8b%95!spl5n&sg51f7wsyvasx%7ddl$07-f-iynh",
-    ),
-    FRONT_END_URL=(str, None),
-    OKTA_CLIENT_ID=(str, None),
-    OKTA_CLIENT_SECRET=(str, None),
-    OKTA_DOMAIN=(str, None),
-    OKTA_LOGIN_REDIRECT=(str, None),
-    USE_HTTPS=(bool, True),
+    ), # Secret key for Django
+    FRONT_END_URL=(str, None), # Frontend URL for the application
+    MOCK_AUTH=(bool, False), # Allow mock authentication (used only during testing)
+    OKTA_CLIENT_ID=(str, None), # Okta client ID
+    OKTA_CLIENT_SECRET=(str, None), # Okta client secret
+    OKTA_DOMAIN=(str, None), # Okta domain
+    OKTA_LOGIN_REDIRECT=(str, None), # Okta login redirect URL
+    USE_HTTPS=(bool, True), # Whether to run the application using HTTPS (affects secure cookies)
 )
 
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
@@ -164,6 +165,7 @@ OKTA = {
     "CLIENT_SECRET": env.str("OKTA_CLIENT_SECRET"),
     "LOGIN_REDIRECT": env.str("OKTA_LOGIN_REDIRECT")
 }
+MOCK_AUTH = env.bool("MOCK_AUTH")
 
 # Front-end config
 FRONT_END_URL = env.str("FRONT_END_URL")

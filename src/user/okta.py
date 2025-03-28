@@ -4,6 +4,7 @@ from jwt import (
     PyJWKClient,
     decode,
     )
+import json
 
 
 # Initialize the JWK client
@@ -11,6 +12,15 @@ jwks_client = PyJWKClient(f"{settings.OKTA["DOMAIN"]}/oauth2/default/v1/keys")
 
 
 def get_email_from_token(token: str) -> str:
+    # In testing environments we don't use real Okta, so the token is
+    # just a JSON string containing the claims
+    if settings.MOCK_AUTH:
+        # Decode the token as a JSON string
+        decoded_token = json.loads(token)
+        # Get the email from the decoded token
+        email: str = decoded_token.get('sub')
+        return email
+
     # Get the signing key
     signing_key = jwks_client.get_signing_key_from_jwt(token)
 
