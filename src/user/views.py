@@ -2,9 +2,9 @@ from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.views import View
 from django.shortcuts import redirect
 from django.conf import settings
-from .okta import get_access_token, get_email_from_token
 from .serializers import UserSerializer
 from django.contrib.auth import get_user_model
+from core.auth import TokenManager
 
 
 User = get_user_model()
@@ -19,8 +19,9 @@ class LoginView(View):
         if code is None:
             return redirect(f"{settings.FRONT_END_URL}/error")
         try:
-            access_token = get_access_token(code)
-            email = get_email_from_token(access_token)
+            token_manager = TokenManager()
+            access_token = token_manager.get_access_token(code)
+            email = token_manager.get_email_from_token(access_token)
             try:
                 self.serializer.find_by_email(email)
             except User.DoesNotExist:
@@ -43,15 +44,13 @@ class LoginView(View):
 
 
 class CurrentUserView(View):
-
     serializer = UserSerializer()
 
     def get(self, request: HttpRequest) -> HttpResponse:
-        token = request.COOKIES.get(settings.TOKEN_COOKIE_CONFIG["NAME"])
-        if token is None:
-            return HttpResponse(status=401)
         try:
-            email = get_email_from_token(token)
+            if not request.user.is_authenticated:
+                return JsonResponse({"error": "Not authenticated"}, status=401)
+            email = request.user.email
             user = self.serializer.find_by_email(email)
             return JsonResponse({"user": self.serializer.to_dict(user)})
         except Exception as e:

@@ -10,6 +10,7 @@ import logging
 from .utils import Helper
 from . import static
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,8 @@ def tests_helper(request: pytest.FixtureRequest) -> Helper:
     def cleanup() -> None:
         try:
             if api_container is not None:
+                logs = api_container.get_logs()[1].decode("utf-8")
+                logger.info("API Container logs:\n%s", logs)
                 logger.info("Stopping API container")
                 api_container.stop()
                 api_container._container.remove(force=True)

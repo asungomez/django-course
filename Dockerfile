@@ -19,7 +19,7 @@ RUN apk add --update --no-cache \
     build-base \
     postgresql-dev \
     musl-dev
-RUN python -m venv /py 
+RUN python -m venv /py
 COPY ./requirements.txt /tmp/requirements.txt
 RUN /py/bin/pip install --upgrade pip && \
     /py/bin/pip install -r /tmp/requirements.txt

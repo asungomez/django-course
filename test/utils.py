@@ -1,6 +1,7 @@
 import requests
 import psycopg2
 from typing import Any, Optional, Sequence, Mapping
+import json
 
 
 class Helper:
@@ -70,16 +71,29 @@ class Helper:
             return None
         return result[0]
 
-    def get_request(self, path: str) -> requests.Response:
+    def get_request(
+            self,
+            path: str,
+            authenticated_as: str = None
+            ) -> requests.Response:
         """
         Make a request to the API.
 
         :param path: The path to request
+        :param authenticated_as: The email of the user to authenticate as
 
         :return: The response object
         """
         url = f"{self.api_url}{path}"
-        response = requests.get(url, allow_redirects=False)
+        headers = {
+            "Accept": "application/json",
+        }
+        if authenticated_as is not None:
+            access_token = json.dumps({
+                "sub": authenticated_as
+            })
+            headers["Authorization"] = f"Bearer {access_token}"
+        response = requests.get(url, allow_redirects=False, headers=headers)
         return response
 
     def insert_user(self, user: dict[Any]) -> None:
