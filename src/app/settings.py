@@ -13,21 +13,31 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import environ # type: ignore
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
-    DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list[str], []), # Allowed hosts for the Django app
+    ALLOWED_ORIGINS=(list[str], []), # Allowed origins for CORS
+    DB_HOST=(str, None), # Database host
+    DB_NAME=(str, None), # Database name
+    DB_PASSWORD=(str, None), # Database password
+    DB_PORT=(int, None), # Database port
+    DB_USER=(str, None), # Database user
+    DEBUG=(bool, False), # Debug mode for Django
     DJANGO_SECRET_KEY=(
         str,
         "django-insecure-trkc%c14mv8b%95!spl5n&sg51f7wsyvasx%7ddl$07-f-iynh",
-    ),
-    DB_HOST=(str, None),
-    DB_NAME=(str, None),
-    DB_USER=(str, None),
-    DB_PASSWORD=(str, None),
-    DB_PORT=(int, None),
+    ), # Secret key for Django
+    FRONT_END_URL=(str, None), # Frontend URL for the application
+    MOCK_AUTH=(bool, False), # Allow mock authentication (used only during testing)
+    OKTA_CLIENT_ID=(str, None), # Okta client ID
+    OKTA_CLIENT_SECRET=(str, None), # Okta client secret
+    OKTA_DOMAIN=(str, None), # Okta domain
+    OKTA_LOGIN_REDIRECT=(str, None), # Okta login redirect URL
+    USE_HTTPS=(bool, True), # Whether to run the application using HTTPS (affects secure cookies)
 )
 
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
@@ -36,10 +46,12 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-SECRET_KEY = env("DJANGO_SECRET_KEY")
-DEBUG = env("DEBUG")
+SECRET_KEY = env.str("DJANGO_SECRET_KEY")
+DEBUG = env.bool("DEBUG")
 
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS: list[str] = env.list("ALLOWED_HOSTS")
+CORS_ALLOWED_ORIGINS: list[str] = env.list("ALLOWED_ORIGINS")
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Application definition
@@ -51,15 +63,18 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "core",
+    "user",
 ]
 
 MIDDLEWARE = [
+    "core.auth.CustomAuthMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -91,32 +106,14 @@ WSGI_APPLICATION = "app.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "HOST": env("DB_HOST"),
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWORD"),
-        "PORT": env("DB_PORT"),
+        "HOST": env.str("DB_HOST"),
+        "NAME": env.str("DB_NAME"),
+        "USER": env.str("DB_USER"),
+        "PASSWORD": env.str("DB_PASSWORD"),
+        "PORT": env.int("DB_PORT"),
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
-]
 
 
 # Internationalization
@@ -141,4 +138,43 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-AUTH_USER_MODEL = 'core.User'
+# Auth config
+
+AUTH_USER_MODEL = "core.User"
+
+OKTA = {
+    "DOMAIN": env.str("OKTA_DOMAIN"),
+    "CLIENT_ID": env.str("OKTA_CLIENT_ID"),
+    "CLIENT_SECRET": env.str("OKTA_CLIENT_SECRET"),
+    "LOGIN_REDIRECT": env.str("OKTA_LOGIN_REDIRECT")
+}
+MOCK_AUTH = env.bool("MOCK_AUTH")
+
+# Front-end config
+FRONT_END_URL = env.str("FRONT_END_URL")
+
+TOKEN_COOKIE_CONFIG = {
+    "NAME": "access_token",
+    "DOMAIN": None,
+    "SECURE": env.bool("USE_HTTPS"),
+    "HTTP_ONLY": True,
+    "PATH": "/",
+    "SAMESITE": "Lax",
+    "LIFETIME": timedelta(hours=1)
+}
+
+# Logging config
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+}

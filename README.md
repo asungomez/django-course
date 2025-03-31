@@ -102,6 +102,12 @@ To run the tests, you can use the following command:
 pytest
 ```
 
+If you want to run a single test case, you can use the -k option:
+
+```bash
+pytest -k "test_case_name"
+```
+
 ## Running the application using Docker
 
 The benefits of using Docker is that the application will run in the exact same environment it would when deployed, making it easier to debug issues. It also doesn't require you to install Python or create a virtual environment. It does not integrate easily with VSCode debugging, though.
