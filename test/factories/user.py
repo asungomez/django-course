@@ -1,7 +1,7 @@
 from typing import Any
 
 
-def user_factory(overrides: dict[Any]) -> dict[Any]:
+def user_factory(overrides: dict[str, Any]) -> dict[str, Any]:
     user = {
         "email": "fake-user@email.net",
         "first_name": "Fake",

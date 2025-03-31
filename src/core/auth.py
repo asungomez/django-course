@@ -16,48 +16,14 @@ from typing import Optional
 User = get_user_model()
 
 
-class CustomAuthMiddleware(AuthenticationMiddleware):
-    """
-    Custom authentication middleware to handle Okta authentication
-    """
-
-    verifier: 'TokenManager' = None
-    serializer = UserSerializer()
-
-    def __init__(self, get_response):
-        self.verifier = TokenManager()
-        super().__init__(get_response)
-
-    def process_request(self, request: HttpRequest):
-        """
-        Process the request to authenticate the user based on the token
-
-        :param request: The request object
-        """
-        try:
-            token = self.verifier.get_token_from_request(request)
-            if token is None:
-                return
-            email = self.verifier.get_email_from_token(token)
-            user = self.serializer.find_by_email(email)
-            request.user = user
-        except Exception as e:
-            print(f"Authentication failed: {str(e)}")
-            request.user = AnonymousUser()
-
-
 class TokenManager:
     """
     Class to manage Okta authentication and token handling
     """
 
-    jwks_client = None
-
-    def __init__(self):
-        # Initialize the JWK client
-        self.jwks_client = PyJWKClient(
-            f"{settings.OKTA['DOMAIN']}/oauth2/default/v1/keys"
-            )
+    jwks_client = PyJWKClient(
+        f"{settings.OKTA['DOMAIN']}/oauth2/default/v1/keys"
+        )
 
     def get_email_from_token(self, token: str) -> str:
         """
@@ -74,8 +40,8 @@ class TokenManager:
             # Decode the token as a JSON string
             decoded_token = json.loads(token)
             # Get the email from the decoded token
-            email: str = decoded_token.get('sub')
-            return email
+            mock_email: str = decoded_token.get('sub')
+            return mock_email
 
         # Get the signing key
         signing_key = self.jwks_client.get_signing_key_from_jwt(token)
@@ -137,3 +103,30 @@ class TokenManager:
                 if len(header_parts) >= 2 and header_parts[0] == "Bearer":
                     token = " ".join(header_parts[1:])
         return token
+
+
+class CustomAuthMiddleware(AuthenticationMiddleware):
+    """
+    Custom authentication middleware to handle Okta authentication
+    """
+
+    verifier = TokenManager()
+    serializer = UserSerializer()
+
+    def process_request(self, request: HttpRequest) -> None:
+        """
+        Process the request to authenticate the user based on the token
+
+        :param request: The request object
+        """
+        try:
+            token = self.verifier.get_token_from_request(request)
+            if token is None:
+                request.user = AnonymousUser()
+                return
+            email = self.verifier.get_email_from_token(token)
+            user = self.serializer.find_by_email(email)
+            request.user = user
+        except Exception as e:
+            print(f"Authentication failed: {str(e)}")
+            request.user = AnonymousUser()

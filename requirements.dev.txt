@@ -4,3 +4,4 @@ django-stubs==5.1.3
 types-docker==7.1.0.20241229
 djangorestframework-stubs[compatible-mypy]==3.15.3
 types-requests==2.32.0.20250306
+types-psycopg2==2.9.21.20250318

@@ -10,9 +10,9 @@ class Helper:
     mocks, etc.
     """
 
-    api_url: str = None
-    mockserver_url: str = None
-    db_connection: psycopg2.extensions.connection = None
+    api_url: Optional[str] = None
+    mockserver_url: Optional[str] = None
+    db_connection: Optional[psycopg2.extensions.connection] = None
 
     def __init__(
             self,
@@ -56,7 +56,7 @@ class Helper:
         url = f"{self.mockserver_url}/mockserver/reset"
         requests.put(url)
 
-    def find_user_by_email(self, email: str) -> Optional[dict]:
+    def find_user_by_email(self, email: str) -> Optional[dict[str, Any]]:
         """
         Find a user by email.
 
@@ -64,17 +64,34 @@ class Helper:
         :return: The user object
         """
         lower_email = email.lower()
-        query = "SELECT * FROM core_user WHERE email = %s"
+        query = """
+        SELECT
+            id, email, username, first_name, last_name
+        FROM core_user
+        WHERE email = %s
+        """
         params = (lower_email,)
         result = self.query_db(query, params)
-        if len(result) == 0:
+        if result is None or len(result) == 0:
             return None
-        return result[0]
+        first_result = result[0]
+        if len(first_result) < 5:
+            raise ValueError(
+                "The result of the user query does not contain all the fields"
+            )
+        user_dict = {
+            "id": first_result[0],
+            "email": first_result[1],
+            "username": first_result[2],
+            "first_name": first_result[3],
+            "last_name": first_result[4],
+        }
+        return user_dict
 
     def get_request(
             self,
             path: str,
-            authenticated_as: str = None
+            authenticated_as: Optional[str] = None
             ) -> requests.Response:
         """
         Make a request to the API.
@@ -96,12 +113,15 @@ class Helper:
         response = requests.get(url, allow_redirects=False, headers=headers)
         return response
 
-    def insert_user(self, user: dict[Any]) -> None:
+    def insert_user(self, user: dict[str, Any]) -> None:
         """
         Insert a user into the database.
 
         :param user: The user object to insert
         """
+        if self.db_connection is None:
+            return None
+
         cursor = self.db_connection.cursor()
         query = """
             INSERT INTO core_user (
@@ -133,7 +153,7 @@ class Helper:
 
     def mock_okta_token_response(
             self,
-            response_body: any,
+            response_body: Any,
             response_status: int = 200
             ) -> None:
         """
@@ -154,7 +174,7 @@ class Helper:
             self,
             request_path: str,
             request_method: str = "GET",
-            response_body: any = {},
+            response_body: Any = {},
             response_status: int = 200,
             ) -> None:
         """
@@ -189,7 +209,7 @@ class Helper:
             self,
             query: str,
             params: Sequence[Any] | Mapping[str, Any] | None = None
-            ) -> Optional[list]:
+            ) -> Optional[list[tuple[Any, Any]]]:
         """
         Query the database.
 
@@ -198,6 +218,8 @@ class Helper:
 
         :return: The result of the query
         """
+        if self.db_connection is None:
+            return None
         cursor = self.db_connection.cursor()
         cursor.execute(query, params)
         result = None
