@@ -10,10 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-from pathlib import Path
-import environ # type: ignore
 import os
 from datetime import timedelta
+from pathlib import Path
+
+import environ  # type: ignore
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,6 +32,7 @@ env = environ.Env(
         str,
         "django-insecure-trkc%c14mv8b%95!spl5n&sg51f7wsyvasx%7ddl$07-f-iynh",
     ), # Secret key for Django
+    ENCRYPTION_KEY=(str, None), # Key used for encrypting sensitive data
     FRONT_END_URL=(str, None), # Frontend URL for the application
     MOCK_AUTH=(bool, False), # Allow mock authentication (used only during testing)
     OKTA_CLIENT_ID=(str, None), # Okta client ID
@@ -48,6 +50,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 SECRET_KEY = env.str("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DEBUG")
+ENCRYPTION_KEY = env.str("ENCRYPTION_KEY")
 
 ALLOWED_HOSTS: list[str] = env.list("ALLOWED_HOSTS")
 CORS_ALLOWED_ORIGINS: list[str] = env.list("ALLOWED_ORIGINS")
@@ -153,8 +156,8 @@ MOCK_AUTH = env.bool("MOCK_AUTH")
 # Front-end config
 FRONT_END_URL = env.str("FRONT_END_URL")
 
-TOKEN_COOKIE_CONFIG = {
-    "NAME": "access_token",
+AUTH_COOKIE_CONFIG = {
+    "NAME": "credentials",
     "DOMAIN": None,
     "SECURE": env.bool("USE_HTTPS"),
     "HTTP_ONLY": True,

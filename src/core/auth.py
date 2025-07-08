@@ -8,6 +8,7 @@ from django.contrib.auth.middleware import AuthenticationMiddleware
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpRequest
 
+from core.crypto import Crypto
 from user.serializers import UserSerializer
 
 User = get_user_model()
@@ -84,13 +85,20 @@ class TokenManager:
 
         :return: The token if found, otherwise None
         """
-        token = request.COOKIES.get(settings.TOKEN_COOKIE_CONFIG["NAME"])
-        if token is None:
+        encrypted_credentials = request.COOKIES.get(
+            settings.AUTH_COOKIE_CONFIG["NAME"]
+            )
+        if encrypted_credentials is None:
             auth_header = request.headers.get("Authorization")
             if auth_header:
                 header_parts = auth_header.split(" ")
                 if len(header_parts) >= 2 and header_parts[0] == "Bearer":
                     token = " ".join(header_parts[1:])
+        else:
+            crypto = Crypto()
+            credentials_json = crypto.decrypt(encrypted_credentials)
+            credentials = json.loads(credentials_json)
+            token = credentials.get("access_token")
         return token
 
 
