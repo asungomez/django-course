@@ -24,8 +24,11 @@ class LoginView(View):
             return redirect(f"{settings.FRONT_END_URL}/error")
         try:
             token_manager = TokenManager()
-            access_token = token_manager.get_access_token(code)
-            email = token_manager.get_email_from_token(access_token)
+            at, rt = token_manager.get_tokens_from_provider(code)
+            email = token_manager.get_email_from_tokens(
+                at,
+                rt
+                )
             try:
                 self.serializer.find_by_email(email)
             except User.DoesNotExist:
@@ -33,7 +36,8 @@ class LoginView(View):
 
             crypto = Crypto()
             credentials_map = {
-                "access_token": access_token,
+                "access_token": at,
+                "refresh_token": rt,
             }
             credentials = json.dumps(credentials_map)
             encrypted_credentials = crypto.encrypt(credentials)

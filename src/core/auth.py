@@ -1,5 +1,5 @@
 import json
-from typing import Optional
+from typing import Optional, Tuple
 
 import requests
 from django.conf import settings
@@ -19,7 +19,11 @@ class TokenManager:
     Class to manage Okta authentication and token handling
     """
 
-    def get_email_from_token(self, token: str) -> str:
+    def get_email_from_tokens(
+        self,
+        access_token: str,
+        refresh_token: str
+    ) -> str:
         """
         Get the email from the token. It decodes the token and retrieves
         the email from the claims.
@@ -32,7 +36,7 @@ class TokenManager:
         # just a JSON string containing the claims
         if settings.MOCK_AUTH:
             # Decode the token as a JSON string
-            decoded_token = json.loads(token)
+            decoded_token = json.loads(access_token)
             # Get the email from the decoded token
             mock_email: str = decoded_token.get('sub')
             return mock_email
@@ -40,7 +44,7 @@ class TokenManager:
         url = f"{settings.OKTA['DOMAIN']}/userinfo"
         headers = {
             "Accept": "application/json",
-            "Authorization": f"Bearer {token}"
+            "Authorization": f"Bearer {access_token}"
         }
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -50,14 +54,14 @@ class TokenManager:
             raise ValueError("Email not found in the token")
         return email
 
-    def get_access_token(self, code: str) -> str:
+    def get_tokens_from_provider(self, code: str) -> Tuple[str, str]:
         """
         Make a request to Okta to retrieve the access token based on the
         code
 
         :param code: The authorization code received from Okta
 
-        :return: The access token
+        :return: The access token and refresh token
         """
         url = f"{settings.OKTA['DOMAIN']}/oauth/token"
         headers = {
@@ -73,17 +77,20 @@ class TokenManager:
         }
         response = requests.post(url, headers=headers, data=payload)
         response.raise_for_status()
-        access_token: str = response.json()["access_token"]
-        return access_token
+        access_token: str = response.json().get("access_token")
+        refresh_token: str = response.json().get("refresh_token")
+        return access_token, refresh_token
 
-    def get_token_from_request(self, request: HttpRequest) -> Optional[str]:
+    def get_tokens_from_request(self, request: HttpRequest) -> Optional[
+        Tuple[str, str]
+    ]:
         """
-        Get the token from the request. It checks both the cookies and the
+        Get the tokens from the request. It checks both the cookies and the
         Authorization header.
 
         :param request: The request object
 
-        :return: The token if found, otherwise None
+        :return: A tuple containing the access token and refresh token, or None
         """
         encrypted_credentials = request.COOKIES.get(
             settings.AUTH_COOKIE_CONFIG["NAME"]
@@ -93,13 +100,15 @@ class TokenManager:
             if auth_header:
                 header_parts = auth_header.split(" ")
                 if len(header_parts) >= 2 and header_parts[0] == "Bearer":
-                    token = " ".join(header_parts[1:])
+                    access_token = " ".join(header_parts[1:])
+                    refresh_token = 'placeholder_refresh_token'
         else:
             crypto = Crypto()
             credentials_json = crypto.decrypt(encrypted_credentials)
             credentials = json.loads(credentials_json)
-            token = credentials.get("access_token")
-        return token
+            access_token = credentials.get("access_token")
+            refresh_token = credentials.get("refresh_token")
+        return access_token, refresh_token
 
 
 class CustomAuthMiddleware(AuthenticationMiddleware):
@@ -117,11 +126,11 @@ class CustomAuthMiddleware(AuthenticationMiddleware):
         :param request: The request object
         """
         try:
-            token = self.verifier.get_token_from_request(request)
-            if token is None:
+            at, rt = self.verifier.get_tokens_from_request(request)
+            if at is None:
                 request.user = AnonymousUser()
                 return
-            email = self.verifier.get_email_from_token(token)
+            email = self.verifier.get_email_from_tokens(at, rt)
             user = self.serializer.find_by_email(email)
             request.user = user
         except Exception as e:
