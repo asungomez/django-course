@@ -1,15 +1,14 @@
-import docker.models
-import docker.models.networks
+import logging
+import os
+
+import docker
 import pytest
 from testcontainers.core.container import DockerContainer  # type: ignore
 from testcontainers.core.network import Network  # type: ignore
 from testcontainers.core.waiting_utils import wait_for_logs  # type: ignore
-import docker
-import os
-import logging
-from .utils import Helper
-from . import static
 
+from . import static
+from .utils import Helper
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -153,7 +152,7 @@ def tests_helper(request: pytest.FixtureRequest) -> Helper:
             api_url=api_url,
             mockserver_url=mockserver_external_url,
             db_port=db_port,
-            )
+        )
         return helper
     except Exception as e:
         logger.error("Error starting containerized system: %s", str(e))
@@ -176,6 +175,7 @@ def tear_down(request: pytest.FixtureRequest, tests_helper: Helper) -> None:
     This is used to clean up the database and remove the mocks
     after each test.
     """
+
     def cleanup() -> None:
         tests_helper.clean_up_mocks()
         tests_helper.clean_up_db()
