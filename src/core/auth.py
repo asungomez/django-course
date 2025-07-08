@@ -1,17 +1,14 @@
-from django.http import HttpRequest
-from django.conf import settings
 import json
-from jwt import (
-    PyJWKClient,
-    decode,
-    )
-from django.contrib.auth import get_user_model
-import requests
-from user.serializers import UserSerializer
-from django.contrib.auth.middleware import AuthenticationMiddleware
-from django.contrib.auth.models import AnonymousUser
 from typing import Optional
 
+import requests
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.middleware import AuthenticationMiddleware
+from django.contrib.auth.models import AnonymousUser
+from django.http import HttpRequest
+
+from user.serializers import UserSerializer
 
 User = get_user_model()
 
@@ -20,10 +17,6 @@ class TokenManager:
     """
     Class to manage Okta authentication and token handling
     """
-
-    jwks_client = PyJWKClient(
-        f"{settings.OKTA['DOMAIN']}/oauth2/default/v1/keys"
-        )
 
     def get_email_from_token(self, token: str) -> str:
         """
@@ -43,21 +36,17 @@ class TokenManager:
             mock_email: str = decoded_token.get('sub')
             return mock_email
 
-        # Get the signing key
-        signing_key = self.jwks_client.get_signing_key_from_jwt(token)
-
-        # Decode and verify the token
-        decoded_token = decode(
-            token,
-            signing_key.key,
-            algorithms=["RS256"],
-            audience="api://default",
-            options={"verify_exp": True}
-        )
-
-        # Get the email
-        email: str = decoded_token.get('sub')
-
+        url = f"{settings.OKTA['DOMAIN']}/userinfo"
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {token}"
+        }
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        userinfo = response.json()
+        email: str = userinfo.get("email")
+        if not email:
+            raise ValueError("Email not found in the token")
         return email
 
     def get_access_token(self, code: str) -> str:
@@ -69,7 +58,7 @@ class TokenManager:
 
         :return: The access token
         """
-        url = f"{settings.OKTA["DOMAIN"]}/oauth2/default/v1/token"
+        url = f"{settings.OKTA['DOMAIN']}/oauth/token"
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "Accept": "application/json",
@@ -79,7 +68,7 @@ class TokenManager:
             "code": code,
             "redirect_uri": settings.OKTA["LOGIN_REDIRECT"],
             "client_id": settings.OKTA["CLIENT_ID"],
-            "client_secret": settings.OKTA["CLIENT_SECRET"],
+            "client_secret": settings.OKTA["CLIENT_SECRET"]
         }
         response = requests.post(url, headers=headers, data=payload)
         response.raise_for_status()

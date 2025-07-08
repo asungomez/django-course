@@ -1,7 +1,8 @@
-import requests
-import psycopg2
-from typing import Any, Optional, Sequence, Mapping
 import json
+from typing import Any, Mapping, Optional, Sequence
+
+import psycopg2
+import requests
 
 
 class Helper:
@@ -164,7 +165,7 @@ class Helper:
         """
 
         self.mock_response(
-            request_path="/okta/oauth2/default/v1/token",
+            request_path="/okta/oauth/token",
             request_method="POST",
             response_body=response_body,
             response_status=response_status,
