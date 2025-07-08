@@ -9,9 +9,8 @@ class Crypto:
     A class to handle encryption and decryption of sensitive data.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.key = settings.ENCRYPTION_KEY.encode()
-        # Ensure key is URL-safe base64-encoded and 32 bytes long
         if len(base64.urlsafe_b64decode(
           self.key + b'=' * (-len(self.key) % 4)
           )) != 32:
