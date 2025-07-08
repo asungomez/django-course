@@ -57,6 +57,11 @@ DB_NAME=django_course
 DB_USER=django_course
 DB_PASSWORD=django_course
 DJANGO_SECRET_KEY="django-insecure-trkc%c14mv8b%95!spl5n&sg51f7wsyvasx%7ddl$07-f-iynh"
+OKTA_DOMAIN=<Okta domain>
+OKTA_CLIENT_ID=<Okta client ID>
+OKTA_CLIENT_SECRET=<Okta client secret>
+OKTA_LOGIN_REDIRECT=http://localhost:8000/users/login-callback
+FRONT_END_URL=http://localhost:5173
 ```
 
 Then you can run a dev server using:
@@ -66,7 +71,7 @@ cd src
 python manage.py runserver 0.0.0.0:8000
 ```
 
-### Validating the code
+## Validating the code
 
 The dependencies for validations can be installed using:
 
@@ -106,6 +111,14 @@ If you want to run a single test case, you can use the -k option:
 
 ```bash
 pytest -k "test_case_name"
+```
+
+### Pre-commit hook
+
+To ensure that the code is properly formatted and validated before committing, you can use pre-commit hooks. To install the pre-commit hooks, run:
+
+```bash
+pre-commit install
 ```
 
 ## Running the application using Docker
