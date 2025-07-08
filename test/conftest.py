@@ -111,6 +111,10 @@ def tests_helper(request: pytest.FixtureRequest) -> Helper:
             .with_env("OKTA_DOMAIN", f"{mockserver_url}/okta")
             .with_env("OKTA_LOGIN_REDIRECT", static.FRONT_END_URL)
             .with_env("USE_HTTPS", False)
+            .with_env(
+                "ENCRYPTION_KEY",
+                "HqvJK8Ur9q_ZFZlnM-1TOKu7sK4HidccP6NnmMdCEVo="
+                )
             .with_network(network)
             .start()
         )
