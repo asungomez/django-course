@@ -57,6 +57,7 @@ DB_NAME=django_course
 DB_USER=django_course
 DB_PASSWORD=django_course
 DJANGO_SECRET_KEY="django-insecure-trkc%c14mv8b%95!spl5n&sg51f7wsyvasx%7ddl$07-f-iynh"
+ENCRYPTION_KEY='HqvJK8Ur9q_ZFZlnM-1TOKu7sK4HidccP6NnmMdCEVo='
 OKTA_DOMAIN=<Okta domain>
 OKTA_CLIENT_ID=<Okta client ID>
 OKTA_CLIENT_SECRET=<Okta client secret>
