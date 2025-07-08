@@ -86,7 +86,10 @@ def tests_helper(request: pytest.FixtureRequest) -> Helper:
         # Build the API image
         build_env = os.environ.get("BUILD_ENV", "development")
         logger.info("Building image")
-        image, _ = client.images.build(path=".", buildargs={"BUILD_ENV": build_env})
+        image, _ = client.images.build(
+            path=".",
+            buildargs={"BUILD_ENV": build_env}
+            )
 
         # Spin up the API container
         logger.info("Starting container")
