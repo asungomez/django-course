@@ -1,5 +1,3 @@
-import json
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -7,7 +5,6 @@ from django.shortcuts import redirect
 from django.views import View
 
 from core.auth import TokenManager
-from core.crypto import Crypto
 
 from .serializers import UserSerializer
 
@@ -25,33 +22,14 @@ class LoginView(View):
         try:
             token_manager = TokenManager()
             at, rt = token_manager.get_tokens_from_provider(code)
-            email = token_manager.get_email_from_tokens(
-                at,
-                rt
-                )
+            email, at, rt = token_manager.authenticate(at, rt)
             try:
                 self.serializer.find_by_email(email)
             except User.DoesNotExist:
                 self.serializer.create({"email": email})
 
-            crypto = Crypto()
-            credentials_map = {
-                "access_token": at,
-                "refresh_token": rt,
-            }
-            credentials = json.dumps(credentials_map)
-            encrypted_credentials = crypto.encrypt(credentials)
             response = redirect(f"{settings.FRONT_END_URL}/profiles")
-            response.set_cookie(
-                key=settings.AUTH_COOKIE_CONFIG["NAME"],
-                value=encrypted_credentials,
-                domain=settings.AUTH_COOKIE_CONFIG["DOMAIN"],
-                path=settings.AUTH_COOKIE_CONFIG["PATH"],
-                expires=settings.AUTH_COOKIE_CONFIG["LIFETIME"],
-                secure=settings.AUTH_COOKIE_CONFIG["SECURE"],
-                httponly=settings.AUTH_COOKIE_CONFIG["HTTP_ONLY"],
-                samesite=settings.AUTH_COOKIE_CONFIG["SAMESITE"],
-            )
+            token_manager.set_credentials_as_cookie(response, at, rt)
             return response
         except Exception as e:
             print(e)
