@@ -39,7 +39,7 @@ class TokenManager:
             decoded_token = json.loads(access_token)
             # Get the email from the decoded token
             mock_email: str = decoded_token.get('sub')
-            return mock_email
+            return mock_email, access_token, refresh_token
 
         url = f"{settings.OKTA['DOMAIN']}/userinfo"
         headers = {
@@ -87,8 +87,8 @@ class TokenManager:
         refresh_token: str = response.json().get("refresh_token")
         return access_token, refresh_token
 
-    def get_tokens_from_request(self, request: HttpRequest) -> Optional[
-        Tuple[str, str]
+    def get_tokens_from_request(self, request: HttpRequest) -> Tuple[
+        Optional[str], Optional[str]
     ]:
         """
         Get the tokens from the request. It checks both the cookies and the
@@ -138,7 +138,10 @@ class TokenManager:
         }
         response = requests.post(url, headers=headers, data=payload)
         response.raise_for_status()
-        return response.json().get("access_token")
+        access_token: Optional[str] = response.json().get("access_token")
+        if not access_token:
+            raise ValueError("Access token not found in the response")
+        return access_token
 
     def set_credentials_as_cookie(self, response: HttpResponse,
                                   access_token: str,
@@ -187,7 +190,7 @@ class CustomAuthMiddleware(AuthenticationMiddleware):
         """
         try:
             at, rt = self.verifier.get_tokens_from_request(request)
-            if at is None:
+            if at is None or rt is None:
                 request.user = AnonymousUser()
                 return
             self.access_token = at
