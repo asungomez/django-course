@@ -25,12 +25,13 @@ class TokenManager:
         refresh_token: str
     ) -> Tuple[str, str, str]:
         """
-        Get the email from the token. It decodes the token and retrieves
-        the email from the claims.
+        Get the email from the token. If the access token is invalid or
+        expired, it will use the refresh token to get a new access token.
 
         :param token: The JWT token received from Okta
 
-        :return: The email address from the token
+        :return: The email address from the token, the access token, and the
+        refresh token
         """
         # In testing environments we don't use real Okta, so the token is
         # just a JSON string containing the claims
